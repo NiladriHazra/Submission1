@@ -1,103 +1,169 @@
-import Image from "next/image";
+'use client';
+
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { AlertTriangle, Users, TrendingUp, Shield, Video } from 'lucide-react';
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [mounted, setMounted] = useState(false);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return null;
+  }
+
+  return (
+    <div className="min-h-screen w-full bg-black font-mono">
+      {/* Content */}
+      <div>
+        {/* Navigation */}
+        <nav className="flex items-center justify-between p-6 lg:px-8 border-b border-gray-800">
+          <div className="flex items-center">
+            <Shield className="h-8 w-8 text-blue-400 mr-3" />
+            <span className="text-xl font-bold text-white">Student Risk Monitor</span>
+          </div>
+          <div className="flex items-center space-x-8">
+            <Link href="/dashboard" className="text-gray-400 hover:text-blue-400 transition-colors text-sm uppercase tracking-wider">
+              Dashboard
+            </Link>
+            <Link href="/students" className="text-gray-400 hover:text-blue-400 transition-colors text-sm uppercase tracking-wider">
+              Students
+            </Link>
+            <Link href="/alerts" className="text-gray-400 hover:text-blue-400 transition-colors text-sm uppercase tracking-wider">
+              Alerts
+            </Link>
+            <Link href="/ai-tutor" className="text-gray-400 hover:text-blue-400 transition-colors text-sm uppercase tracking-wider flex items-center gap-2">
+              <Video className="w-4 h-4" />
+              AI Tutor
+            </Link>
+          </div>
+        </nav>
+
+        {/* Hero Section */}
+        <div className="px-6 py-24 sm:py-32 lg:px-8">
+          <div className="mx-auto max-w-4xl">
+            <h1 className="text-4xl font-bold text-white sm:text-6xl mb-8">
+              Student Risk Monitor
+            </h1>
+            <p className="text-lg text-gray-400 max-w-3xl mb-12 leading-relaxed">
+              Monitor and analyze student performance with <span className="text-blue-400 font-semibold">AI-powered risk assessment</span> — 
+              attendance tracking, grade analysis, behavioral indicators, and more — side-by-side in one place. 
+              Built for educators, administrators, and teams who want faster, clearer insights.
+            </p>
+            
+            <div className="mb-16">
+              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-6">
+                Built by Education Technology Team
+              </h3>
+              <p className="text-gray-400 mb-8">
+                Hi, we're building Student Risk Monitor to make multi-factor student analysis simple and fast. 
+                Follow along on our progress, and feel free to reach out.
+              </p>
+              
+              <div className="flex space-x-4">
+                <div className="bg-gray-900 border border-gray-700 rounded px-4 py-2 text-gray-400 text-sm">
+                  Dashboard
+                </div>
+                <div className="bg-gray-900 border border-gray-700 rounded px-4 py-2 text-gray-400 text-sm">
+                  Analytics
+                </div>
+                <div className="bg-gray-900 border border-gray-700 rounded px-4 py-2 text-gray-400 text-sm">
+                  Alerts
+                </div>
+              </div>
+            </div>
+
+            <div className="mb-16">
+              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-6">
+                What makes Student Risk Monitor different
+              </h3>
+              <div className="space-y-4 text-gray-400">
+                <div className="flex items-start">
+                  <span className="text-blue-400 mr-3">→</span>
+                  <span>Compare risk factors from multiple data sources in a single view</span>
+                </div>
+                <div className="flex items-start">
+                  <span className="text-blue-400 mr-3">→</span>
+                  <span>Organize by student profiles; keep context flowing</span>
+                </div>
+                <div className="flex items-start">
+                  <span className="text-blue-400 mr-3">→</span>
+                  <span>Works with attendance systems, grade books, and more providers</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="mb-16">
+              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-6">
+                FAQ
+              </h3>
+              
+              <div className="space-y-8">
+                <div>
+                  <h4 className="text-white font-semibold mb-2">What is Student Risk Monitor?</h4>
+                  <p className="text-gray-400">
+                    Student Risk Monitor is an AI-powered platform that lets you analyze student performance from <span className="text-blue-400 font-semibold">200+ data points</span> in one interface.
+                  </p>
+                </div>
+                
+                <div>
+                  <h4 className="text-white font-semibold mb-2">Is Student Risk Monitor free?</h4>
+                  <p className="text-gray-400">
+                    There's a free experience with sample data. You can connect your own data sources for full analysis and control.
+                  </p>
+                </div>
+                
+                <div>
+                  <h4 className="text-white font-semibold mb-2">Which data sources are supported?</h4>
+                  <p className="text-gray-400">
+                    Attendance systems, grade books, behavioral tracking, parent communications, and many more via integrations and native providers.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex space-x-4">
+              <Link
+                href="/dashboard"
+                className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 text-sm font-semibold transition-colors border border-blue-600"
+              >
+                View Dashboard
+              </Link>
+              <Link
+                href="/ai-tutor"
+                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-6 py-3 text-sm font-semibold transition-colors flex items-center gap-2"
+              >
+                <Video className="w-4 h-4" />
+                Try AI Tutor
+              </Link>
+              <Link
+                href="/students"
+                className="border border-gray-700 text-gray-300 hover:text-white hover:border-gray-600 px-6 py-3 text-sm font-semibold transition-colors"
+              >
+                Browse Students →
+              </Link>
+            </div>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+        {/* Footer */}
+        <footer className="border-t border-gray-800 py-12">
+          <div className="mx-auto max-w-7xl px-6 lg:px-8">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <Shield className="h-6 w-6 text-blue-400 mr-2" />
+                <span className="text-sm text-gray-500">Student Risk Monitor</span>
+              </div>
+              <p className="text-sm text-gray-500">
+                Powered by AI for better educational outcomes
+              </p>
+            </div>
+          </div>
+        </footer>
+      </div>
     </div>
   );
 }
