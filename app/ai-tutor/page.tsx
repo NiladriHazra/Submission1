@@ -13,12 +13,13 @@ interface Message {
 export default function AITutorPage() {
   const [isCallActive, setIsCallActive] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
-  const [isVideoOn, setIsVideoOn] = useState(true);
+  const [isVideoOn, setIsVideoOn] = useState(false);
   const [isSpeakerOn, setIsSpeakerOn] = useState(true);
   const [isListening, setIsListening] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentTranscript, setCurrentTranscript] = useState('');
   const [aiSpeaking, setAiSpeaking] = useState(false);
+  const [textInput, setTextInput] = useState('');
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const recognitionRef = useRef<any>(null);
@@ -98,90 +99,72 @@ export default function AITutorPage() {
       // Wait a moment for devices to be released
       await new Promise(resolve => setTimeout(resolve, 100));
 
-      // Try to get media stream with more specific constraints
-      const constraints = {
-        video: isVideoOn ? {
-          width: { ideal: 640 },
-          height: { ideal: 480 },
-          facingMode: 'user'
-        } : false,
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true
-        }
-      };
-
+      // Start with audio-only mode to avoid device conflicts
       let stream: MediaStream;
+      
       try {
-        stream = await navigator.mediaDevices.getUserMedia(constraints);
-      } catch (videoErr: any) {
-        console.error('Initial stream request failed:', {
-          name: videoErr.name,
-          message: videoErr.message,
-          constraint: videoErr.constraint,
-          constraints: constraints
+        // Try audio-only first - this is most reliable
+        stream = await navigator.mediaDevices.getUserMedia({ 
+          video: false, 
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true
+          }
         });
+        setIsVideoOn(false);
+        console.log('Audio-only mode started successfully');
         
-        // Try progressive fallback strategies
-        if (videoErr.name === 'NotReadableError' || videoErr.name === 'AbortError') {
-          console.log('Device busy, trying fallback strategies...');
-          
-          // Strategy 1: Audio-only with basic constraints
+        // If audio works, optionally try to add video later
+        if (isVideoOn) {
           try {
-            await new Promise(resolve => setTimeout(resolve, 500));
-            stream = await navigator.mediaDevices.getUserMedia({ 
-              video: false, 
-              audio: true 
+            const videoStream = await navigator.mediaDevices.getUserMedia({ 
+              video: {
+                width: { ideal: 640 },
+                height: { ideal: 480 },
+                facingMode: 'user'
+              }, 
+              audio: false 
             });
-            setIsVideoOn(false);
-            console.log('Fallback 1: Audio-only successful');
-          } catch (audioErr: any) {
-            console.error('Audio-only failed:', audioErr);
             
-            // Strategy 2: Minimal audio constraints
-            try {
-              await new Promise(resolve => setTimeout(resolve, 500));
-              stream = await navigator.mediaDevices.getUserMedia({ 
-                audio: { 
-                  echoCancellation: false, 
-                  noiseSuppression: false,
-                  autoGainControl: false
-                }
-              });
-              setIsVideoOn(false);
-              console.log('Fallback 2: Minimal audio successful');
-            } catch (minimalErr: any) {
-              console.error('Minimal audio failed:', minimalErr);
-              
-              // Strategy 3: Try without any constraints
-              try {
-                await new Promise(resolve => setTimeout(resolve, 500));
-                stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                setIsVideoOn(false);
-                console.log('Fallback 3: Basic audio successful');
-              } catch (basicErr: any) {
-                console.error('All fallback strategies failed:', basicErr);
-                throw basicErr;
-              }
-            }
-          }
-        } else if (videoErr.name === 'OverconstrainedError') {
-          // Try with simpler video constraints
-          try {
-            stream = await navigator.mediaDevices.getUserMedia({ 
-              video: true, 
-              audio: true 
-            });
-            console.log('Simplified constraints successful');
-          } catch (simpleErr: any) {
-            // Fall back to audio only
-            stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            // Combine audio and video tracks
+            const combinedStream = new MediaStream([
+              ...stream.getAudioTracks(),
+              ...videoStream.getVideoTracks()
+            ]);
+            
+            // Stop the old audio-only stream
+            stream.getTracks().forEach(track => track.stop());
+            stream = combinedStream;
+            setIsVideoOn(true);
+            console.log('Video added successfully');
+          } catch (videoErr) {
+            console.warn('Video failed, continuing with audio-only:', videoErr);
             setIsVideoOn(false);
-            console.log('Video overconstrained, using audio only');
           }
-        } else {
-          throw videoErr;
+        }
+        
+      } catch (audioErr: any) {
+        console.error('Audio failed, trying minimal constraints:', audioErr);
+        
+        // Fallback to minimal audio constraints
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({ 
+            audio: { 
+              echoCancellation: false, 
+              noiseSuppression: false,
+              autoGainControl: false
+            }
+          });
+          setIsVideoOn(false);
+          console.log('Minimal audio mode successful');
+        } catch (minimalErr: any) {
+          console.error('All audio attempts failed:', minimalErr);
+          
+          // Last resort - try basic audio
+          stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          setIsVideoOn(false);
+          console.log('Basic audio mode successful');
         }
       }
       
@@ -190,10 +173,9 @@ export default function AITutorPage() {
       
       if (videoRef.current && stream.getVideoTracks().length > 0) {
         videoRef.current.srcObject = stream;
-        setIsVideoOn(true);
       }
       
-      addAIMessage("Hello! I'm your AI tutor. How can I help you today? Feel free to speak naturally, and I'll listen and respond.");
+      addAIMessage("Hello! I'm your AI tutor. I'm running in audio mode to avoid device conflicts. How can I help you today? Feel free to speak naturally, and I'll listen and respond.");
     } catch (err: any) {
       console.error('Error starting call:', {
         name: err.name,
@@ -201,20 +183,10 @@ export default function AITutorPage() {
         constraint: err.constraint
       });
       
-      // Handle specific error cases with better debugging info
-      if (err.name === 'NotAllowedError') {
-        alert('Camera and microphone access denied. Please:\n1. Click the camera/microphone icon in your browser address bar\n2. Allow permissions for this site\n3. Refresh the page and try again');
-      } else if (err.name === 'NotFoundError') {
-        alert('No camera or microphone found. Please:\n1. Check that your devices are connected\n2. Make sure no other apps are using them\n3. Try refreshing the page');
-      } else if (err.name === 'NotReadableError') {
-        alert('Device is busy or unavailable. Please:\n1. Close other applications using camera/microphone\n2. Wait a few seconds and try again\n3. If problem persists, restart your browser');
-      } else if (err.name === 'AbortError') {
-        alert('Device access was interrupted. Please try starting the call again.');
-      } else if (err.name === 'OverconstrainedError') {
-        alert('Your device doesn\'t support the required video/audio settings. The app will try with basic settings.');
-      } else {
-        alert(`Device access failed (${err.name}): ${err.message}\n\nPlease:\n1. Refresh the page\n2. Check browser permissions\n3. Restart browser if needed`);
-      }
+      // Final fallback - start without media but allow text interaction
+      setIsCallActive(true);
+      setIsVideoOn(false);
+      addAIMessage("I'm having trouble accessing your microphone, but I'm still here to help! You can type your questions and I'll respond. If you'd like voice interaction, please check your browser permissions and try refreshing the page.");
     }
   };
 
@@ -377,10 +349,16 @@ export default function AITutorPage() {
       };
       setMessages(prev => [...prev, studentMessage]);
       
-      // Generate AI response
-      setTimeout(() => {
-        generateAIResponse(text.trim());
-      }, 1000);
+      // Generate AI response immediately
+      generateAIResponse(text.trim());
+    }
+  };
+
+  const handleTextSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (textInput.trim()) {
+      handleStudentMessage(textInput);
+      setTextInput('');
     }
   };
 
@@ -563,6 +541,26 @@ export default function AITutorPage() {
                     </div>
                   )}
                 </div>
+              </div>
+
+              {/* Text Input */}
+              <div className="bg-black/20 backdrop-blur-md border border-white/10 rounded-2xl p-4">
+                <form onSubmit={handleTextSubmit} className="flex gap-2">
+                  <input
+                    type="text"
+                    value={textInput}
+                    onChange={(e) => setTextInput(e.target.value)}
+                    placeholder="Type your question here..."
+                    className="flex-1 bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                  />
+                  <button
+                    type="submit"
+                    disabled={!textInput.trim()}
+                    className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:cursor-not-allowed px-6 py-2 rounded-lg transition-colors"
+                  >
+                    Send
+                  </button>
+                </form>
               </div>
 
               {/* Controls */}
